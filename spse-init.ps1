@@ -6,8 +6,8 @@ function SPSE_GetExtensions {
         $Pretty
     )
 
-    $script_names = [Array](Get-ChildItem $PSEEnv.repositoryExtensionsDirectory -Name | Where-Object {
-        $script_path = Join-Path $PSEEnv.repositoryExtensionsDirectory $_
+    $script_names = [Array](Get-ChildItem $SPSEEnv.repositoryExtensionsDirectory -Name | Where-Object {
+        $script_path = Join-Path $SPSEEnv.repositoryExtensionsDirectory $_
         ($_ -match "\.ps1$") -and (Test-Path $script_path -PathType Leaf)
     })
 
@@ -15,7 +15,7 @@ function SPSE_GetExtensions {
         $script_object = [PSCustomObject]@{
             Name = $_
             Enabled = SPSE_IsExtensionEnabled -Name $_
-            FullName = Join-Path $PSEEnv.repositoryExtensionsDirectory $_
+            FullName = Join-Path $SPSEEnv.repositoryExtensionsDirectory $_
         }
 
         $script_object.PSObject.Members.Add(
@@ -64,7 +64,7 @@ function SPSE_GetExtensions {
 }
 
 function SPSE_RemoveZombieSymlinks {
-    $zombie_symlinks = Get-ChildItem $PSEEnv.enabledUserExtensionsDirectory | ForEach-Object { Get-Item $_ } | Where-Object {
+    $zombie_symlinks = Get-ChildItem $SPSEEnv.enabledUserExtensionsDirectory | ForEach-Object { Get-Item $_ } | Where-Object {
         return ($_.Attributes -match "ReparsePoint") -and (-not (Test-Path $_.LinkTarget))
     }
 
@@ -89,7 +89,7 @@ function SPSE_IsExtensionEnabled {
                 },
 
                 (New-Object System.Management.Automation.ValidateSetAttribute(
-                    (Get-ChildItem $PSEEnv.repositoryExtensionsDirectory -Name | Where-Object { (Test-Path -Path (Join-Path $PSEEnv.repositoryExtensionsDirectory $_) -PathType Leaf) -and ($_ -match "\.ps1$") })
+                    (Get-ChildItem $SPSEEnv.repositoryExtensionsDirectory -Name | Where-Object { (Test-Path -Path (Join-Path $SPSEEnv.repositoryExtensionsDirectory $_) -PathType Leaf) -and ($_ -match "\.ps1$") })
                 ))
             )))
         )
@@ -99,7 +99,7 @@ function SPSE_IsExtensionEnabled {
 
     process {
         $Name = $PSBoundParameters["Name"]
-        return Test-Path -Path (Join-Path $PSEEnv.enabledUserExtensionsDirectory $Name) -PathType Leaf
+        return Test-Path -Path (Join-Path $SPSEEnv.enabledUserExtensionsDirectory $Name) -PathType Leaf
     }
 }
 
@@ -126,7 +126,7 @@ function SPSE_SetExtensionEnabled {
                 },
 
                 (New-Object System.Management.Automation.ValidateSetAttribute(
-                    (Get-ChildItem $PSEEnv.repositoryExtensionsDirectory -Name | Where-Object { (Test-Path -Path (Join-Path $PSEEnv.repositoryExtensionsDirectory $_) -PathType Leaf) -and ($_ -match "\.ps1$") })
+                    (Get-ChildItem $SPSEEnv.repositoryExtensionsDirectory -Name | Where-Object { (Test-Path -Path (Join-Path $SPSEEnv.repositoryExtensionsDirectory $_) -PathType Leaf) -and ($_ -match "\.ps1$") })
                 ))
             )))
         )
@@ -139,8 +139,8 @@ function SPSE_SetExtensionEnabled {
     }
 
     process {
-        $script_path  = [String](Join-Path $PSEEnv.repositoryExtensionsDirectory  $Name)
-        $symlink_path = [String](Join-Path $PSEEnv.enabledUserExtensionsDirectory $Name)
+        $script_path  = [String](Join-Path $SPSEEnv.repositoryExtensionsDirectory  $Name)
+        $symlink_path = [String](Join-Path $SPSEEnv.enabledUserExtensionsDirectory $Name)
     
         if(-not (Test-Path $script_path -PathType Leaf)) {
             Write-Error "Cannot find script '$Name' at location '$script_path'"
@@ -162,7 +162,7 @@ function SPSE_SetExtensionEnabled {
     }
 }
 
-New-Variable -Name PSEEnv -Value @{
+New-Variable -Name SPSEEnv -Value @{
     repositoryDirectory            = [String]"$HOME\Dropbox\Repositories\shaynas-powershell-extensions"
     repositoryExtensionsDirectory  = [String]"$HOME\Dropbox\Repositories\shaynas-powershell-extensions\extensions"
     enabledUserExtensionsDirectory = [String]"$HOME\shaynas-powershell-extensions\enabled-user-extensions\"
@@ -172,23 +172,23 @@ New-Variable -Name PSEEnv -Value @{
 Write-Host -ForegroundColor Magenta ("< Shayna's PowerShell Extensions >").PadLeft(43, " ")
 Write-Host -ForegroundColor Magenta "<$("~"*50)>"
 
-if(-not (Test-Path $PSEEnv.enabledUserExtensionsDirectory -PathType Container)) {
-    Write-Host -ForegroundColor Red "Could not find the powershell-extensions directory for the current user.`nExpecting to find this directory: '$($PSEEnv.enabledUserExtensionsDirectory)'`n"`
+if(-not (Test-Path $SPSEEnv.enabledUserExtensionsDirectory -PathType Container)) {
+    Write-Host -ForegroundColor Red "Could not find the powershell-extensions directory for the current user.`nExpecting to find this directory: '$($SPSEEnv.enabledUserExtensionsDirectory)'`n"`
 
     $create_directory_attempts = 0
     $new_item_error = $null
 
     do {
-        if(-not (Test-Path $PSEEnv.enabledUserExtensionsDirectory -PathType Container)) {
+        if(-not (Test-Path $SPSEEnv.enabledUserExtensionsDirectory -PathType Container)) {
             Start-Sleep -Milliseconds (100 * $create_directory_attempts)
-            Write-Host "Attempt number $create_directory_attempts / 10 to create diectory... '$($PSEEnv.enabledUserExtensionsDirectory)'"
-            New-Item -ItemType Directory $PSEEnv.enabledUserExtensionsDirectory -Force -ErrorVariable $new_item_error | Out-Null
+            Write-Host "Attempt number $create_directory_attempts / 10 to create diectory... '$($SPSEEnv.enabledUserExtensionsDirectory)'"
+            New-Item -ItemType Directory $SPSEEnv.enabledUserExtensionsDirectory -Force -ErrorVariable $new_item_error | Out-Null
             ++$create_directory_attempts
         }
-    } while(($create_directory_attempts -lt 10) -and (-not (Test-Path $PSEEnv.enabledUserExtensionsDirectory -PathType Container)))
+    } while(($create_directory_attempts -lt 10) -and (-not (Test-Path $SPSEEnv.enabledUserExtensionsDirectory -PathType Container)))
     
-    if(Test-Path $PSEEnv.enabledUserExtensionsDirectory -PathType Container) {
-        Write-Host -ForegroundColor Green "`nCreated '$($PSEEnv.enabledUserExtensionsDirectory)' successfully."
+    if(Test-Path $SPSEEnv.enabledUserExtensionsDirectory -PathType Container) {
+        Write-Host -ForegroundColor Green "`nCreated '$($SPSEEnv.enabledUserExtensionsDirectory)' successfully."
     } else {    
         Write-Error -Category ResourceUnavailable -Message "`nThis user's symlinks directory still doesn't exist after an attempt was made to create it automatically.`nPlease create this directory manually, or debug this script !!!"`
 
@@ -204,8 +204,8 @@ if(Test-Path -Path "HKCU:\Console" -PathType Container) {
 }
 
 # Import enabled PowerShell profile scripts.
-foreach($child_item_path in ( Get-Childitem -Path $PSEEnv.enabledUserExtensionsDirectory -Name `
-                            | ForEach-Object { Join-Path $PSEEnv.enabledUserExtensionsDirectory $_ } `
+foreach($child_item_path in ( Get-Childitem -Path $SPSEEnv.enabledUserExtensionsDirectory -Name `
+                            | ForEach-Object { Join-Path $SPSEEnv.enabledUserExtensionsDirectory $_ } `
                             | Where-Object   { Test-Path -Path $_ -PathType Leaf                   } `
                             | Where-Object   { $_ -match "\.ps1$"                                  } `
                             )
@@ -226,11 +226,11 @@ foreach($child_item_path in ( Get-Childitem -Path $PSEEnv.enabledUserExtensionsD
         }
     }
     
-    $PSEEnv.loadedExtensions += $child_item_path 
+    $SPSEEnv.loadedExtensions += $child_item_path 
 }
 
 Write-Host -NoNewline -ForegroundColor Green "Finished loading "
-Write-Host -NoNewline -ForegroundColor Magenta $PSEEnv.loadedExtensions.Count
+Write-Host -NoNewline -ForegroundColor Magenta $SPSEEnv.loadedExtensions.Count
 Write-Host -ForegroundColor Green (" extensions.").PadRight(100, " ")
 
 Write-Host -ForegroundColor Magenta "<$("~"*50)>`n"
