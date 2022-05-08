@@ -163,9 +163,9 @@ function SPSE_SetExtensionEnabled {
 }
 
 New-Variable -Name PSEEnv -Value @{
-    repositoryDirectory            = [String]"$HOME\Dropbox\Repositories\powershell-extensions"
-    repositoryExtensionsDirectory  = [String]"$HOME\Dropbox\Repositories\powershell-extensions\extensions"
-    enabledUserExtensionsDirectory = [String]"$HOME\powershell-extensions\enabled-user-extensions\"
+    repositoryDirectory            = [String]"$HOME\Dropbox\Repositories\shaynas-powershell-extensions"
+    repositoryExtensionsDirectory  = [String]"$HOME\Dropbox\Repositories\shaynas-powershell-extensions\extensions"
+    enabledUserExtensionsDirectory = [String]"$HOME\shaynas-powershell-extensions\enabled-user-extensions\"
     loadedExtensions               = [Array]@()
 }
 
